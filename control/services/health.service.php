@@ -42,6 +42,24 @@ class HealthController extends SuperController {
         exit;
     }
 
+    public function editRecord(array $data): void {
+        $stmt = $this->db->prepare(
+            'UPDATE health_records SET record_type=:rt, title=:ti, description=:de, vet_name=:vn, visit_date=:vd, next_visit_date=:nv WHERE ID=:id'
+        );
+        $stmt->execute([
+            ':rt' => $data['record_type'],
+            ':ti' => $data['title'],
+            ':de' => $data['description'] ?? null,
+            ':vn' => $data['vet_name']    ?? null,
+            ':vd' => $data['visit_date'],
+            ':nv' => $data['next_visit_date'] ?: null,
+            ':id' => (int) $data['ID'],
+        ]);
+        flash('success', 'Health record updated.');
+        header('Location: ../pages/health_records.php');
+        exit;
+    }
+
     public function getRecords(string $type): array {
         if ($type === 'all') {
             return $this->db->query('SELECT * FROM health_records ORDER BY visit_date DESC')->fetchAll();

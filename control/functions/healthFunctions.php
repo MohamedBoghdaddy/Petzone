@@ -22,4 +22,5 @@ $data = [
 ];
 
 if (isset($_POST['addRecord']))    $healthService->addRecord($data);
+if (isset($_POST['updateRecord'])) $healthService->editRecord($data);
 if (isset($_POST['deleteRecord'])) $healthService->deleteRecord($data['ID']);
