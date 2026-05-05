@@ -1,123 +1,99 @@
 <?php
-  require_once("superController.php");
-  require_once("../../model/patient.model.php");
-  include_once "appointment.service.php";
+require_once __DIR__ . '/superController.php';
+require_once __DIR__ . '/../../model/patient.model.php';
 
-?>
-<?php
-class PatientsController extends SuperController{ //singleton
-  private static $instance;
-  private function __construct()
-  {
-    $this->db = $this->connect();
-  }
-  public static function getInstance()
-  {
-      if (self::$instance === null) {
-          self::$instance = new self();
-      }
-      return self::$instance;
-  }
+class PatientsController extends SuperController {
+    private static ?PatientsController $instance = null;
 
-  ///////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
+    private function __construct() { parent::__construct(); }
 
-	public function addNewPatient($patient) 
-  {  
-    $sql = "insert into patients(addedBy,petname,species,age,weight)
-        values('$patient->addedBy','$patient->petname','$patient->species','
-                $patient->age','$patient->weight')";
-    $result=$this->db->query($sql);    
-    if($result)
-    {
-        header("location:../pages/patientsManagement.php");
+    public static function getInstance(): self {
+        if (self::$instance === null) self::$instance = new self();
+        return self::$instance;
     }
-    else
-    {
-        echo "Error: " . mysqli_error($conn);
-    }
-	}
 
-	public function editPatient($patient) 
-  {
-    $sql = "update patients set petname='$patient->petname',species='$patient->species',
-            age='$patient->age',weight='$patient->weight' where ID ='$patient->ID'";
-    $result=$this->db->query($sql);  
-    if($result)
-    {
-        header("location:../pages/patientsManagement.php");
-    }
-    else
-    {
-        echo "Error: " . mysqli_error($conn);
-    }
-	}
+    // ------------------------------------------------------------------ //
 
-  public function deletePatient($patient)
-  {
-    $sql = "delete from patients where ID = '$patient->ID'";
-    $result=$this->db->query($sql);  
-    if ($result) 
-    {
-        $appointmentsService = AppointmentsController::getInstance();
-        $appointment = new Appointment("-1","","",$patient->petname,"","");
-        $appointmentsService->deleteAppointmentbyPetname($appointment);
+    public function addNewPatient(array $data): void {
+        $stmt = $this->db->prepare(
+            'INSERT INTO patients (addedBy, petname, species, breed, gender, age, weight, color, notes)
+             VALUES (:by, :pn, :sp, :br, :gn, :ag, :wt, :cl, :nt)'
+        );
+        $stmt->execute([
+            ':by' => $data['addedBy'],
+            ':pn' => $data['petname'],
+            ':sp' => $data['species'],
+            ':br' => $data['breed']  ?? null,
+            ':gn' => $data['gender'] ?? 'Unknown',
+            ':ag' => (int) $data['age'],
+            ':wt' => (float) $data['weight'],
+            ':cl' => $data['color'] ?? null,
+            ':nt' => $data['notes'] ?? null,
+        ]);
+        flash('success', 'Pet added successfully!');
+        header('Location: ../pages/patientsManagement.php');
+        exit;
+    }
 
-        header("location:../../view/pages/patientsManagement.php");
-    } 
-    else 
-    {
-        echo "Error: " . mysqli_error($conn);
+    public function editPatient(array $data): void {
+        $stmt = $this->db->prepare(
+            'UPDATE patients SET petname=:pn, species=:sp, breed=:br, gender=:gn,
+             age=:ag, weight=:wt, color=:cl, notes=:nt WHERE ID=:id'
+        );
+        $stmt->execute([
+            ':pn' => $data['petname'],
+            ':sp' => $data['species'],
+            ':br' => $data['breed']  ?? null,
+            ':gn' => $data['gender'] ?? 'Unknown',
+            ':ag' => (int) $data['age'],
+            ':wt' => (float) $data['weight'],
+            ':cl' => $data['color'] ?? null,
+            ':nt' => $data['notes'] ?? null,
+            ':id' => (int) $data['ID'],
+        ]);
+        flash('success', 'Pet updated successfully!');
+        header('Location: ../pages/patientsManagement.php');
+        exit;
     }
-  }
-  public function deletePatientByAddedBy($patient)
-  {
-    $sql = "delete from patients where addedBy = '$patient->addedBy'";
-    $result=$this->db->query($sql);  
-    if ($result) 
-    {
-        $appointmentsService = AppointmentsController::getInstance();
-        $appointment = new Appointment("-1","","",$patient->petname,"","");
-        $appointmentsService->deleteAppointmentbyPetname($appointment);
-        header("location:../../view/pages/patientsManagement.php");
-    } 
-    else 
-    {
-        echo "Error: " . mysqli_error($conn);
+
+    public function deletePatient(int $id): void {
+        // Health records cascade via FK; appointments deleted explicitly
+        $stmt = $this->db->prepare('SELECT petname FROM patients WHERE ID=:id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $this->db->prepare('DELETE FROM appointments WHERE petname=:pn')
+                     ->execute([':pn' => $row['petname']]);
+        }
+        $this->db->prepare('DELETE FROM patients WHERE ID=:id')->execute([':id' => $id]);
+        flash('success', 'Pet removed.');
+        header('Location: ../../view/pages/patientsManagement.php');
+        exit;
     }
-  }
-  
-  public function getPatients($getType)
-  {
-      $patients = array();
-      //fetch data from user and check if it exists in the database.
-      
-      //select data from database where Email and password match.
-      $sql = "";
-      if($getType =="all")
-      {
-          $sql = "select * from patients";
-      }
-      if($getType =="my")
-      {
-          $sql = "select * from patients where addedBy = '".$_SESSION['Username']."'";
-      }
-      //executes the sql query and sends the query to the database server and returns a result set object with the matching rows.
-      $result=$this->db->query($sql);  
-      //checking if the login credentials match using the session variables.
-      $records=mysqli_fetch_all($result, MYSQLI_ASSOC);
-      foreach($records as $r)
-      {
-          $a['ID'] = $r['ID'];
-          $a['addedBy'] = $r['addedBy'];
-          $a['petname'] = $r['petname'];
-          $a['species']=$r['species'];
-          $a['age'] = $r['age'];
-          $a['weight'] = $r['weight'];
-  
-          array_push($patients, $a);
-      }  
-      return $patients;
-  }
+
+    public function deletePatientsByOwner(string $username): void {
+        $stmt = $this->db->prepare('SELECT petname FROM patients WHERE addedBy=:u');
+        $stmt->execute([':u' => $username]);
+        foreach ($stmt->fetchAll() as $row) {
+            $this->db->prepare('DELETE FROM appointments WHERE petname=:pn')
+                     ->execute([':pn' => $row['petname']]);
+        }
+        $this->db->prepare('DELETE FROM patients WHERE addedBy=:u')->execute([':u' => $username]);
+    }
+
+    public function getPatients(string $type): array {
+        if ($type === 'all') {
+            return $this->db->query('SELECT * FROM patients ORDER BY petname')->fetchAll();
+        }
+        $stmt = $this->db->prepare('SELECT * FROM patients WHERE addedBy=:u ORDER BY petname');
+        $stmt->execute([':u' => $_SESSION['Username']]);
+        return $stmt->fetchAll();
+    }
+
+    public function getPatientById(int $id): ?array {
+        $stmt = $this->db->prepare('SELECT * FROM patients WHERE ID=:id LIMIT 1');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
 }
-?>

@@ -1,5 +1,7 @@
 <?php
-session_status() === PHP_SESSION_ACTIVE ?: session_start();
+require_once __DIR__ . '/../../includes/auth.php';
+start_session();
+session_unset();
 session_destroy();
-header("location:../../view/pages/home.php")
-?>
+header('Location: ../../view/pages/home.php');
+exit;

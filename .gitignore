@@ -1,0 +1,30 @@
+# Environment
+.env
+*.env.local
+
+# XAMPP / PHP
+/vendor/
+composer.lock
+
+# Uploads (user-uploaded images etc.)
+/view/uploads/*
+!/view/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Logs
+*.log
+error_log
+
+# Database exports (don't commit dumps with real data)
+*.sql.gz
+database/dump_*.sql

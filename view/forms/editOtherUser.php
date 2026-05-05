@@ -1,65 +1,79 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<?php include "../pages/sidebar.php";?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href ="../style/style.css">
-  <title>Profile</title>
+  <title>Edit User – PetZone</title>
+  <?php include "../pages/sidebar.php"; ?>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
 
-  
-<body>
-
-<?php 
+<?php
+require_once "../../includes/auth.php";
+require_role('Admin', 'Employee');
 include_once "../../control/functions/usersFunctions.php";
+
+// Values from URL (admin opens this by clicking Edit button)
+$id       = isset($_GET['ID'])          ? (int)   $_GET['ID']                      : 0;
+$fn       = isset($_GET['firstname'])   ? htmlspecialchars($_GET['firstname'])      : '';
+$ln       = isset($_GET['lastname'])    ? htmlspecialchars($_GET['lastname'])       : '';
+$un       = isset($_GET['Username'])    ? htmlspecialchars($_GET['Username'])       : '';
+$em       = isset($_GET['Email'])       ? htmlspecialchars($_GET['Email'])          : '';
+$at       = isset($_GET['accountType']) ? htmlspecialchars($_GET['accountType'])    : 'Client';
 ?>
-<div>
-  hi
-</div>
-<div class ="container">
-        <div class = "form-container">
-          <h1>Profile</h1>
-          
 
-          <form action="" method="post">
-
-          <div class="field input" hidden>
-            <label for="ID">ID</label>
-            <input type ="text" name = "ID" value="<?php echo $_GET['ID']?>" id="ID" required>
+<div class="container py-5 flex-grow-1">
+  <div class="row justify-content-center">
+    <div class="col-sm-10 col-md-7 col-lg-5">
+      <div class="card pz-form-card p-4">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <i class="bi bi-person-gear text-warning" style="font-size:2.2rem"></i>
+            <h2 class="fw-bold mt-2">Edit User</h2>
+            <span class="badge bg-secondary"><?= $un ?></span>
           </div>
 
-          <div class="field input">
-            <label for="first name">First name</label>
-            <input type ="text" name = "firstname" value="<?php echo $_GET['firstname']?>" id="first name" required minlength="2">
-          </div>
+          <form method="post" action="" novalidate>
+            <input type="hidden" name="ID"       value="<?= $id ?>">
+            <input type="hidden" name="Username" value="<?= $un ?>">
 
-          <div class="field input">
-            <label for="Last name">Last name</label>
-            <input type ="text" name = "lastname" value="<?php echo $_GET['lastname']?>" id="Last name" required minlength="2">
-          </div>
-          
-          <div class="field input" hidden>
-            <label for=" Username">Username</label>
-            <input type ="text" name = "Username" id="Username" value="<?php echo $_GET['Username']?>" required >
-          </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">First Name</label>
+                <input type="text" name="firstname" class="form-control" value="<?= $fn ?>" required minlength="2">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Last Name</label>
+                <input type="text" name="lastname" class="form-control" value="<?= $ln ?>" required minlength="2">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Email</label>
+                <input type="email" name="Email" class="form-control" value="<?= $em ?>" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  New Password <span class="text-muted fw-normal small">(leave blank to keep)</span>
+                </label>
+                <input type="password" name="password" class="form-control" minlength="8" placeholder="••••••••">
+              </div>
+            </div>
 
-          <div class="field input">
-            <label for="Email">Email</label>
-            <input type ="email" name = "Email" value="<?php echo $_GET['Email']?>" id="Email" required>
-         </div>
-
-            <div class="field input">
-              <label for="password"> Password  </label>
-              <input type="Password" name="password" id="password" placeholder="Password" value="<?php echo $_GET['password']?>" pattern=".{8,16}" title="8 or more Character" size=30 pattern="[!@#$%^&*][a-z][A-Z][0-9]" required>
-           </div>
-
-          <input type ="submit" class="but" name = "editOtherUser" value="Update" required>
-          <input type ="submit" class="but" name = "deleteOtherUser" value="Delete" required>
-      
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" name="editOtherUser" class="btn btn-warning flex-grow-1 fw-semibold py-2">
+                <i class="bi bi-save me-1"></i>Update User
+              </button>
+              <button type="submit" name="deleteOtherUser" class="btn btn-outline-danger fw-semibold py-2"
+                      onclick="return confirm('Permanently delete this user and all their data?')">
+                <i class="bi bi-trash me-1"></i>Delete
+              </button>
+            </div>
           </form>
-       
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<?php include "../components/footer.php"; ?>
 </body>
 </html>

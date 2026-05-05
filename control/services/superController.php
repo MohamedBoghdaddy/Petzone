@@ -1,15 +1,14 @@
 <?php
-session_status() === PHP_SESSION_ACTIVE ?: session_start();
-require_once("../../Dbh.php");
-abstract class SuperController{
-    protected $db;
-    protected $conn;
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/auth.php';
 
-    public function connect(){
-        if(null === $this->conn ){
-            $this->db = new Dbh();
-        }
-        return $this->db;
+start_session();
+
+abstract class SuperController {
+    protected PDO $db;
+
+    public function __construct() {
+        $this->db = db();
     }
 }
-?>

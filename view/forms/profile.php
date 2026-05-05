@@ -1,61 +1,74 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<?php include "../pages/sidebar.php";?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href ="../style/style.css">
-  <title>Profile</title>
+  <title>My Profile – PetZone</title>
+  <?php include "../pages/sidebar.php"; ?>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
 
-  
-<body>
-
-<?php 
+<?php
+require_once "../../includes/auth.php";
+require_login();
 include_once "../../control/functions/usersFunctions.php";
+$u = current_user();
 ?>
-<div>
-  hi
-</div>
-<div class ="container">
-        <div class = "form-container">
-          <h1>Profile</h1>
-          
 
-          <form action="" method="post">
-
-          <div class="field input">
-            <label for="first name">First name</label>
-            <input type ="text" name = "firstname" value="<?php echo $_SESSION['firstname']?>" id="first name" required minlength="2">
+<div class="container py-5 flex-grow-1">
+  <div class="row justify-content-center">
+    <div class="col-sm-10 col-md-7 col-lg-5">
+      <div class="card pz-form-card p-4">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                 style="width:72px;height:72px">
+              <i class="bi bi-person-fill text-success" style="font-size:2rem"></i>
+            </div>
+            <h2 class="fw-bold">Edit Profile</h2>
+            <span class="badge bg-success"><?= htmlspecialchars($u['accountType']) ?></span>
           </div>
 
-          <div class="field input">
-            <label for="Last name">Last name</label>
-            <input type ="text" name = "lastname" value="<?php echo $_SESSION['lastname']?>" id="Last name" required minlength="2">
-          </div>
-          
-          <div class="field input" hidden>
-            <label for=" Username">Username</label>
-            <input type ="text" name = "Username" id="Username" value="<?php echo $_SESSION['Username']?>" required>
-          </div>
+          <form method="post" action="" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">First Name</label>
+              <input type="text" name="firstname" class="form-control"
+                     value="<?= htmlspecialchars($u['firstname']) ?>" required minlength="2" maxlength="50">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Last Name</label>
+              <input type="text" name="lastname" class="form-control"
+                     value="<?= htmlspecialchars($u['lastname']) ?>" required minlength="2" maxlength="50">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" name="Email" class="form-control"
+                     value="<?= htmlspecialchars($u['Email']) ?>" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                New Password
+                <span class="text-muted fw-normal small">(leave blank to keep current)</span>
+              </label>
+              <input type="password" name="password" class="form-control" minlength="8" placeholder="••••••••">
+            </div>
 
-          <div class="field input">
-            <label for="Email">Email</label>
-            <input type ="email" name = "Email" value="<?php echo $_SESSION['Email']?>" id="Email" required>
-         </div>
-
-            <div class="field input">
-              <label for="password"> Password  </label>
-              <input type="Password" name="password" id="password" placeholder="Password" value="<?php echo $_SESSION['password']?>" pattern=".{8,16}" title="8 or more Character" size=30 pattern="[!@#$%^&*][a-z][A-Z][0-9]" required>
-
-           </div>
-
-          <input type ="submit" class="but" name = "edituser" value="Update" required>
-          <input type ="submit" class="but" name = "deleteuser" value="Delete" required>
-      
+            <div class="d-grid gap-2">
+              <button type="submit" name="edituser" class="btn btn-success fw-semibold py-2">
+                <i class="bi bi-save me-1"></i>Save Changes
+              </button>
+              <button type="submit" name="deleteuser" class="btn btn-outline-danger"
+                      onclick="return confirm('Are you sure? This will permanently delete your account and all pet data.')">
+                <i class="bi bi-trash me-1"></i>Delete My Account
+              </button>
+            </div>
           </form>
-       
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<?php include "../components/footer.php"; ?>
 </body>
 </html>

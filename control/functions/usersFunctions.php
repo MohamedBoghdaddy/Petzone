@@ -1,44 +1,29 @@
 <?php
-session_status() === PHP_SESSION_ACTIVE ?: session_start();
-include_once "../../dbh.inc.php";
-include_once "../../control/services/user.service.php";
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../control/services/user.service.php';
+
+start_session();
 
 $usersService = UsersController::getInstance();
 
-if($_SERVER["REQUEST_METHOD"]=="POST")
-{
-  if(isset($_POST['ID'])){$ID = htmlspecialchars($_POST['ID']);}else{$ID = "-1";}
-  if(isset($_POST['firstname'])){$firstname = htmlspecialchars($_POST['firstname']);}else{$firstname = "";}
-  if(isset($_POST['lastname'])){$lastname = htmlspecialchars($_POST['lastname']);}else{$lastname = "";}
-  if(isset($_POST['Username'])){$Username = htmlspecialchars($_POST['Username']);}else{$Username = "";}
-  if(isset($_POST['Email'])){$Email = htmlspecialchars($_POST['Email']);}else{$Email = "";}
-  if(isset($_POST['password'])){$password = htmlspecialchars($_POST['password']);}else{$password = "";}
-  if(isset($_POST['accountType'])){$accountType = htmlspecialchars($_POST['accountType']);}else{$accountType = "";}
-  
-  $user = new User($ID,$firstname,$lastname,$Username,$Email,$password,$accountType);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-  if (isset($_POST['addUser']))
-  {
-    $usersService->addNewUser($user);
-  }
-  if(isset($_POST['login']))
-  {
-    $usersService->login($user); 
-  }
-  if (isset($_POST['edituser'])) 
-  {
-    $usersService->editMyUser($user);
-  }
-  if (isset($_POST['editOtherUser'])) {
-    $usersService->editUser($user);
-  }
-  if (isset($_POST['deleteuser'])) 
-  {
-    $usersService->deleteMyUser($user);    
-  }
-  if (isset($_POST['deleteOtherUser'])) 
-  {
-    $usersService->deleteUser($user);    
-  }
-}
-?>
+$allowed_types = ['Admin', 'Employee', 'Client'];
+
+$data = [
+    'ID'          => isset($_POST['ID'])          ? (int)   $_POST['ID']                : -1,
+    'firstname'   => isset($_POST['firstname'])   ? trim(htmlspecialchars($_POST['firstname']))   : '',
+    'lastname'    => isset($_POST['lastname'])     ? trim(htmlspecialchars($_POST['lastname']))     : '',
+    'Username'    => isset($_POST['Username'])     ? trim(htmlspecialchars($_POST['Username']))     : '',
+    'Email'       => isset($_POST['Email'])        ? trim(filter_var($_POST['Email'], FILTER_SANITIZE_EMAIL)) : '',
+    'password'    => isset($_POST['password'])     ? $_POST['password']                 : '',
+    'accountType' => isset($_POST['accountType']) && in_array($_POST['accountType'], $allowed_types)
+                        ? $_POST['accountType'] : 'Client',
+];
+
+if (isset($_POST['addUser']))         $usersService->addNewUser($data);
+if (isset($_POST['login']))           $usersService->login($data);
+if (isset($_POST['edituser']))        $usersService->editMyUser($data);
+if (isset($_POST['editOtherUser']))   $usersService->editUser($data);
+if (isset($_POST['deleteuser']))      $usersService->deleteMyUser();
+if (isset($_POST['deleteOtherUser'])) $usersService->deleteUser($data);

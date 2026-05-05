@@ -1,0 +1,90 @@
+/* =========================================================
+   PetZone – Custom styles (layered on top of Bootstrap 5)
+   ========================================================= */
+
+:root {
+  --pz-green:  #2ecc71;
+  --pz-teal:   #1abc9c;
+  --pz-dark:   #1a1a2e;
+  --pz-mid:    #16213e;
+  --pz-card:   #0f3460;
+  --pz-text:   #e0e0e0;
+}
+
+/* ── Navbar ── */
+.pz-navbar {
+  background: var(--pz-dark);
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+.pz-navbar .navbar-brand,
+.pz-navbar .nav-link { color: var(--pz-text) !important; }
+.pz-navbar .nav-link:hover { color: var(--pz-green) !important; }
+.pz-navbar .dropdown-menu { background: var(--pz-mid); border: none; }
+.pz-navbar .dropdown-item { color: var(--pz-text); }
+.pz-navbar .dropdown-item:hover { background: var(--pz-card); color: var(--pz-green); }
+
+/* ── Hero ── */
+.pz-hero {
+  background: linear-gradient(135deg, var(--pz-dark) 0%, var(--pz-card) 100%);
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+}
+.pz-hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+
+/* ── Stat cards on dashboard ── */
+.pz-stat-card {
+  border: none;
+  border-radius: 16px;
+  transition: transform .2s, box-shadow .2s;
+}
+.pz-stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+
+/* ── Service cards on home page ── */
+.pz-service-card {
+  border-radius: 16px;
+  transition: transform .2s, box-shadow .2s;
+  border: none;
+}
+.pz-service-card:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+.pz-service-icon { font-size: 2.5rem; }
+
+/* ── Product cards ── */
+.pz-product-card { border-radius: 14px; border: none; height: 100%; }
+.pz-product-card .card-img-top { height: 200px; object-fit: cover; border-radius: 14px 14px 0 0; }
+.pz-product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.12); transition: all .2s; }
+
+/* ── Pet cards ── */
+.pz-pet-card { border-radius: 14px; border: none; }
+.pz-pet-card .species-badge { font-size: .75rem; }
+
+/* ── Forms ── */
+.pz-form-card {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 4px 24px rgba(0,0,0,.1);
+}
+
+/* ── Tables ── */
+.pz-table { border-radius: 12px; overflow: hidden; }
+.pz-table thead { background: var(--pz-dark); color: #fff; }
+
+/* ── Status badges ── */
+.badge-pending   { background: #f39c12; }
+.badge-confirmed { background: #2ecc71; }
+.badge-cancelled { background: #e74c3c; }
+
+/* ── Footer ── */
+.pz-footer { background: #f8f9fa; border-top: 1px solid #dee2e6; }
+
+/* ── Appointment / health record type colors ── */
+.record-vaccination { color: #2ecc71; }
+.record-checkup     { color: #3498db; }
+.record-surgery     { color: #e74c3c; }
+.record-medication  { color: #f39c12; }
+.record-other       { color: #95a5a6; }
+
+/* ── Utility ── */
+.cursor-pointer { cursor: pointer; }
+.bg-pz-dark  { background: var(--pz-dark) !important; }
+.text-pz-green { color: var(--pz-green) !important; }

@@ -1,122 +1,92 @@
 <?php
-  require_once("superController.php");
-  require_once("../../model/appointment.model.php");
-?>
-<?php
-class AppointmentsController extends SuperController{ //singleton
-  private static $instance;
-  private function __construct()
-  {
-    $this->db = $this->connect();
-  }
-  public static function getInstance()
-  {
-      if (self::$instance === null) {
-          self::$instance = new self();
-      }
-      return self::$instance;
-  }
+require_once __DIR__ . '/superController.php';
+require_once __DIR__ . '/../../model/appointment.model.php';
 
-  ///////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////
+class AppointmentsController extends SuperController {
+    private static ?AppointmentsController $instance = null;
 
-	public function addNewAppointment($appointment) 
-  {  
-    $sql = "insert into appointments(petOwner,EmployeeName,petname,aDate,price)
-        values('$appointment->petOwner','$appointment->EmployeeName','$appointment->petname',
-              '$appointment->aDate','$appointment->price')";
-    $result = $this->db->query($sql);
-    if($result)
-    {
-        header("location:../pages/AppointmentsManagement.php");
+    private function __construct() { parent::__construct(); }
+
+    public static function getInstance(): self {
+        if (self::$instance === null) self::$instance = new self();
+        return self::$instance;
     }
-    else
-    {
-        echo "Error: " . mysqli_error($conn);
-    }
-	}
 
-	public function editAppointment($appointment)
-    { 
-        $sql = "update appointments set aDate='$appointment->aDate' where ID ='$appointment->ID'";
-        $result = $this->db->query($sql);
-        if($result)
-        {
-            header("location:../pages/AppointmentsManagement.php");
+    // ------------------------------------------------------------------ //
+
+    public function addNewAppointment(array $data): void {
+        $stmt = $this->db->prepare(
+            'INSERT INTO appointments (petOwner, EmployeeName, petname, service_type, aDate, price, status)
+             VALUES (:po, :en, :pn, :st, :ad, :pr, :ss)'
+        );
+        $stmt->execute([
+            ':po' => $data['petOwner'],
+            ':en' => $data['EmployeeName'],
+            ':pn' => $data['petname'],
+            ':st' => $data['service_type'] ?? null,
+            ':ad' => $data['aDate'],
+            ':pr' => (float) $data['price'],
+            ':ss' => 'Pending',
+        ]);
+        flash('success', 'Appointment booked! Status: Pending.');
+        header('Location: ../pages/AppointmentsManagement.php');
+        exit;
+    }
+
+    public function editAppointment(array $data): void {
+        $stmt = $this->db->prepare(
+            'UPDATE appointments SET aDate=:ad, status=:ss, notes=:nt WHERE ID=:id'
+        );
+        $stmt->execute([
+            ':ad' => $data['aDate'],
+            ':ss' => $data['status'] ?? 'Pending',
+            ':nt' => $data['notes']  ?? null,
+            ':id' => (int) $data['ID'],
+        ]);
+        flash('success', 'Appointment updated.');
+        header('Location: ../pages/AppointmentsManagement.php');
+        exit;
+    }
+
+    public function updateStatus(int $id, string $status): void {
+        $allowed = ['Pending', 'Confirmed', 'Cancelled'];
+        if (!in_array($status, $allowed, true)) return;
+        $this->db->prepare('UPDATE appointments SET status=:s WHERE ID=:id')
+                 ->execute([':s' => $status, ':id' => $id]);
+        flash('success', "Appointment marked as {$status}.");
+        header('Location: ../pages/AppointmentsManagement.php');
+        exit;
+    }
+
+    public function deleteAppointment(int $id): void {
+        $this->db->prepare('DELETE FROM appointments WHERE ID=:id')->execute([':id' => $id]);
+        flash('success', 'Appointment deleted.');
+        header('Location: ../../view/pages/AppointmentsManagement.php');
+        exit;
+    }
+
+    public function getAppointments(string $type): array {
+        $sql = match($type) {
+            'employee' => 'SELECT * FROM appointments WHERE EmployeeName=:u ORDER BY aDate ASC',
+            'client'   => 'SELECT * FROM appointments WHERE petOwner=:u ORDER BY aDate ASC',
+            default    => null,
+        };
+        if ($sql === null) {
+            return $this->db->query('SELECT * FROM appointments ORDER BY aDate ASC')->fetchAll();
         }
-        else
-        {
-            echo "Error: " . mysqli_error($conn);
-        }
-	}
-
-  public function deleteAppointment($appointment)
-  {
-    $sql = "delete from appointments where ID = '$appointment->ID'";
-    $result = $this->db->query($sql);
-    if ($result) {
-        header("location:../../view/pages/AppointmentsManagement.php");
-    } else {
-        echo "Error: " . mysqli_error($conn);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':u' => $_SESSION['Username']]);
+        return $stmt->fetchAll();
     }
-  }
-  public function deleteAppointmentbyOwnerOrEmp($appointment)
-  {
-    $sql = "delete from appointments where petOwner = '$appointment->petOwner' or EmployeeName = '$appointment->EmployeeName'";
-    $result = $this->db->query($sql);
-    if ($result) {
-        header("location:../../view/pages/AppointmentsManagement.php");
-    } else {
-        echo "Error: " . mysqli_error($conn);
+
+    public function getUpcoming(string $username, int $limit = 5): array {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM appointments WHERE petOwner=:u AND aDate >= CURDATE()
+             ORDER BY aDate ASC LIMIT :lim'
+        );
+        $stmt->bindValue(':u',   $username, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', $limit,    PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
-  }
-  public function deleteAppointmentbyPetname($appointment)
-  {
-    $sql = "delete from appointments where petname = '$appointment->petname'" ;
-    $result = $this->db->query($sql);
-    if ($result) {
-        header("location:../../view/pages/AppointmentsManagement.php");
-    } else {
-        echo "Error: " . mysqli_error($conn);
-    }
-  }
-
-  public function getAppointments($getType)
-  {
-      $appointments = array();
-      //fetch data from user and check if it exists in the database.
-      //select data from database where Email and password match.
-      $sql = "";
-      if($getType == "all")
-      {
-          $sql = "select * from appointments order By aDate DESC";
-      }
-      if($getType == "employee")
-      {
-          $sql = "select * from appointments where EmployeeName = '". $_SESSION['Username'] ."' order By aDate DESC";
-      }
-      if($getType == "client")
-      {
-          $sql = "select * from appointments where petOwner = '". $_SESSION['Username'] ."' order By aDate DESC";
-      }
-      //executes the sql query and sends the query to the database server and returns a result set object with the matching rows.
-      $result = $this->db->query($sql);
-      //checking if the login credentials match using the session variables.
-      $records=mysqli_fetch_all($result, MYSQLI_ASSOC);
-      foreach($records as $r)
-      {
-          $a['ID'] = $r['ID'];
-          $a['petOwner'] = $r['petOwner'];
-          $a['EmployeeName'] = $r['EmployeeName'];
-          $a['petname'] = $r['petname'];
-          $a['aDate'] = $r['aDate'];
-          $a['price'] = $r['price'];
-          array_push($appointments, $a);
-      }    
-      return $appointments;
-  }
-  
-
-
 }
-?>
